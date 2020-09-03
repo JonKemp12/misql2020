@@ -8,10 +8,6 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import com.sybase.jdbcx.SybConnection;
-import com.sybase.jdbc3.jdbc.*;
-
-
 
 /**
  * MISQL - Java command line application which extends the original ISQL.
@@ -33,7 +29,7 @@ public class Misql {
 	 */
 	static	exProperties _connProps = null;
 	
-	static	SybDriver sybDriver = null;
+	static	Driver sybDriver = null;
 	public static	PrintStream _out	= null;
 	
 	static ArrayList<jConnection> _jConns;
@@ -81,21 +77,6 @@ public class Misql {
 		
 		// First initialise default properties values.
 		initProps();
-		
-		// Instantiate the Sybdriver
-        try
-        {
-            // First try to load the 5.x driver
-            sybDriver = (SybDriver) Class.forName(
-                "com.sybase.jdbc3.jdbc.SybDriver").newInstance();
-            sybDriver.setSybMessageHandler(new  MiMessageHandler());	// Install general message handler
-        }
-        catch (Exception ex){
-        	System.err.println("MISISL: Failure to load SybDriver.");
-        	System.err.println("Exception:" + ex);
-        	System.exit(1);
-        }
-
 		
 		// Process command line args
 		if (!processCommandline(args))
@@ -147,7 +128,7 @@ public class Misql {
 		// If -U<user> is given then we need to create a default
 		// connection. This needs to be as ISQL defaults!!
 		if (_connProps.containsKey("USER")) {
-			SybConnection _conn = null;
+			Connection _conn = null;
 			String url = "";
 
 			// How to use interfaces file in jConnect:
@@ -166,7 +147,7 @@ public class Misql {
 
 			try {
 				DriverManager.setLoginTimeout(_loginTimeout);
-				_conn = (SybConnection)DriverManager.getConnection(url, _connProps);
+				_conn = (Connection)DriverManager.getConnection(url, _connProps);
 				_curConn = new jConnection(_conn, "default");
 				_curConn.userName = _connProps.getProperty("USER");
 				_curConn.server = _serverName;
@@ -307,7 +288,7 @@ public class Misql {
 				continue;
 			}
 			try {
-	            SybStatement stmt = (SybStatement) _curConn.conn.createStatement();
+	            Statement stmt = (Statement) _curConn.conn.createStatement();
 	            // stmt.setEscapeProcessing(_escapeProcessing);
 	            // _curConn.conn.clearWarnings();
 	            
@@ -317,9 +298,9 @@ public class Misql {
 		            int rowsAffected = 0;
 		            boolean results = stmt.execute(batchBuff.toString());		            
 					do {
-						SybResultSet rs = null;
+						ResultSet rs = null;
 						if (results) {
-							rs = (SybResultSet) stmt.getResultSet();
+							rs = (ResultSet) stmt.getResultSet();
 								// Print the results to outFile vertical or horizontal format
 							if (_verticalRows == 0) {
 								Hresults hrs = new Hresults(rs, _colWidth);	
@@ -1003,16 +984,12 @@ public class Misql {
 		SQLException notaSybE = null;
 		while (sqe != null)
 		{
-			if (sqe instanceof SybSQLException) {	// Check this is a SybSQLException
-				SybSQLException sybe = (SybSQLException) sqe;
-				_out.println("Msg " + sybe.getErrorCode() + 
-						", Level " + sybe.getSeverity() + 
-						", State " + sybe.getState() + ":");
-				_out.println("Server '" + sybe.getServerName() + 
-						"', Line " + sybe.getLineNumber() + ":");
+			if (sqe instanceof SQLException) {	// Check this is a SybSQLException
+				SQLException sybe = (SQLException) sqe;
+				_out.println("Msg " + sybe.getErrorCode() + ":");
 				_out.print(sybe.getMessage());
 
-			} else if (sqe instanceof SybSQLWarning ||
+			} else if (sqe instanceof SQLWarning ||
 					sqe instanceof SQLWarning) {	// Check this is a SybSQLWarning
 //				_out.println("Warning " + sybw.getErrorCode() + 
 //						", Level " + sybw.getSeverity() + 

@@ -33,7 +33,7 @@ public class Vresults {
 		this.rs = rs;
 		this.vRows = vRows;
 		this.rowTerm = rowTerm;
-		mif = new MiFormat();		// Build a formatter for various types		
+		mif = new MiFormat(null);		// Build a formatter for various types		
 		ResultSetMetaData rsmd;
 		rsmd = rs.getMetaData();
 		numColumns = rsmd.getColumnCount();
